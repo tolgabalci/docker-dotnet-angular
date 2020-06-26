@@ -74,7 +74,9 @@ RUN apt-get install -y tree \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PATH=$PATH:/usr/local/share/nvm/versions/node/v12.18.0/bin
-RUN npm install -g @angular/cli
+RUN NPM_DIR="$( echo '/usr/local/share/nvm/versions/node/v1'*'/bin' )" \
+    && PATH="$PATH:$NPM_DIR" \
+    && echo PATH=$PATH \
+    && npm install -g @angular/cli
 
 CMD ["pwsh"]
