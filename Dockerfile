@@ -74,4 +74,20 @@ RUN NPM_DIR="$( echo '/usr/local/share/nvm/versions/node/v1'*'/bin' )" \
     && echo PATH=$PATH \
     && npm install -g @angular/cli
 
+SHELL ["pwsh", "-c"]
+# Install Posh-Git
+RUN Install-Module posh-git -Scope CurrentUser -AllowPrerelease -Force; \
+    Import-Module posh-git; \
+    Add-PoshGitToProfile -AllUsers -AllHosts; \
+    \
+    # Install DotNet Completion
+    $script = { Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
+    param($commandName, $wordToComplete, $cursorPosition) \
+    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object { \
+    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) \
+    } \
+    } }; \
+    $script.ToString() >> $PROFILE.AllUsersAllHosts
+SHELL ["/bin/sh", "-c"]
+
 CMD ["pwsh"]
