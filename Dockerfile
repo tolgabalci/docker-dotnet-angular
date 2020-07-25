@@ -1,4 +1,11 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1
+
+# sdk:3.1 label has an issue with:
+# Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+# Where the selection does not appear for Menu
+# FROM mcr.microsoft.com/dotnet/core/sdk:3.1
+
+ARG VARIANT="3.1-bionic"
+FROM mcr.microsoft.com/dotnet/core/sdk:${VARIANT}
 
 # This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
 # property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
@@ -22,7 +29,7 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
     #
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
-    && apt-get -y install git openssh-client less iproute2 procps apt-transport-https gnupg2 curl lsb-release \
+    && apt-get -y install git openssh-client less iproute2 procps apt-transport-https gnupg2 curl lsb-release ca-certificates \
     #
     # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
     && groupadd --gid $USER_GID $USERNAME \
@@ -49,8 +56,8 @@ RUN apt-get update \
     && chown -R ${USER_UID}:root ${NVM_DIR} \
     #
     # Install yarn
-    && curl -sS https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/pubkey.gpg | apt-key add - 2>/dev/null \
-    && echo "deb https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - 2>/dev/null \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
     && apt-get update \
     && apt-get -y install --no-install-recommends yarn; \
     fi \
@@ -81,24 +88,24 @@ RUN Install-Module posh-git -Scope CurrentUser -AllowPrerelease -Force; \
     Add-PoshGitToProfile -AllUsers -AllHosts; \
     $script = { \
     # Install DotNet Completion
-        Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
-            param($commandName, $wordToComplete, $cursorPosition) \
-            dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object { \
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) \
-        } }; \
+    Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
+    param($commandName, $wordToComplete, $cursorPosition) \
+    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object { \
+    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) \
+    } }; \
     #
     # Configure PSReadline
-        Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete; \
-        Set-PSReadlineOption -ShowToolTips; \
-        Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord; \
-        Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function NextWord; \
-        Set-PSReadlineKeyHandler -Key Shift+LeftArrow -Function SelectBackwardChar; \
-        Set-PSReadlineKeyHandler -Key Shift+RightArrow -Function SelectForwardChar; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+LeftArrow -Function SelectBackwardWord; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+RightArrow -Function SelectNextWord ; \
-        Set-PSReadlineKeyHandler -Key Ctrl+a -Function SelectAll; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+Home -Function SelectBackwardsLine ; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+End -Function SelectLine ; \
+    Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete; \
+    Set-PSReadlineOption -ShowToolTips; \
+    Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord; \
+    Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function NextWord; \
+    Set-PSReadlineKeyHandler -Key Shift+LeftArrow -Function SelectBackwardChar; \
+    Set-PSReadlineKeyHandler -Key Shift+RightArrow -Function SelectForwardChar; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+LeftArrow -Function SelectBackwardWord; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+RightArrow -Function SelectNextWord ; \
+    Set-PSReadlineKeyHandler -Key Ctrl+a -Function SelectAll; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+Home -Function SelectBackwardsLine ; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+End -Function SelectLine ; \
     }; \
     $script.ToString() >> $PROFILE.AllUsersAllHosts
 SHELL ["/bin/sh", "-c"]
