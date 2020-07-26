@@ -81,24 +81,30 @@ RUN Install-Module posh-git -Scope CurrentUser -AllowPrerelease -Force; \
     Add-PoshGitToProfile -AllUsers -AllHosts; \
     $script = { \
     # Install DotNet Completion
-        Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
-            param($commandName, $wordToComplete, $cursorPosition) \
-            dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object { \
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) \
-        } }; \
+    Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
+    param($commandName, $wordToComplete, $cursorPosition) \
+    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object { \
+    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) \
+    } }; \
     #
     # Configure PSReadline
-        Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete; \
-        Set-PSReadlineOption -ShowToolTips; \
-        Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord; \
-        Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function NextWord; \
-        Set-PSReadlineKeyHandler -Key Shift+LeftArrow -Function SelectBackwardChar; \
-        Set-PSReadlineKeyHandler -Key Shift+RightArrow -Function SelectForwardChar; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+LeftArrow -Function SelectBackwardWord; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+RightArrow -Function SelectNextWord ; \
-        Set-PSReadlineKeyHandler -Key Ctrl+a -Function SelectAll; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+Home -Function SelectBackwardsLine ; \
-        Set-PSReadlineKeyHandler -Key Ctrl+Shift+End -Function SelectLine ; \
+    $colors = @{ \
+    # Below colors are the two integers separated with semicolon "[FF;BBm" (FF = foreground ; BB = background)
+    #
+    "Selection" = "$([char]0x1b)[30;47m" \
+    }; \ 
+    Set-PSReadLineOption -Colors $colors; \
+    Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete; \
+    Set-PSReadlineOption -ShowToolTips; \
+    Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord; \
+    Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function NextWord; \
+    Set-PSReadlineKeyHandler -Key Shift+LeftArrow -Function SelectBackwardChar; \
+    Set-PSReadlineKeyHandler -Key Shift+RightArrow -Function SelectForwardChar; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+LeftArrow -Function SelectBackwardWord; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+RightArrow -Function SelectNextWord ; \
+    Set-PSReadlineKeyHandler -Key Ctrl+a -Function SelectAll; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+Home -Function SelectBackwardsLine ; \
+    Set-PSReadlineKeyHandler -Key Ctrl+Shift+End -Function SelectLine ; \
     }; \
     $script.ToString() >> $PROFILE.AllUsersAllHosts
 SHELL ["/bin/sh", "-c"]
